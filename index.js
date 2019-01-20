@@ -21,7 +21,8 @@ const mkdir_p = dir =>
 
 app.use((req, res, next) => {
   //const ip = req.connection.remoteAddress;
-  const ip = req.connection.remoteAddress.replace(/^::ffff:/, '');
+  //const ip = req.connection.remoteAddress.replace(/^::ffff:/, '');
+  const ip = req.header['X-Forwarded-For'] || req.connection.remoteAddress;
 
   const authorized = config.authorized.reduce(
     (acc, cidr) => (acc ? acc : cidrCheck(cidr, ip)),
@@ -31,7 +32,10 @@ app.use((req, res, next) => {
   if (authorized) {
     next();
   } else {
-    res.status(401).send({message: 'Unauthorized'});
+    res.status(401).send({
+      message: 'Unauthorized',
+      ip,
+    });
   }
 });
 
