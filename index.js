@@ -144,7 +144,7 @@ app.get('/', (req, res) =>
     }),
 );
 
-app.listen(env.PORT || 3000, err => {
+app.listen(env.PORT || config.port || 3000, err => {
   if (err) {
     console.error(err);
   }
