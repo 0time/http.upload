@@ -22,7 +22,9 @@ const mkdir_p = dir =>
 app.use((req, res, next) => {
   //const ip = req.connection.remoteAddress;
   //const ip = req.connection.remoteAddress.replace(/^::ffff:/, '');
-  const ip = req.header['X-Forwarded-For'] || req.connection.remoteAddress;
+  console.error(req.headers);
+
+  const ip = req.header('X-Forwarded-For') || req.connection.remoteAddress;
 
   const authorized = config.authorized.reduce(
     (acc, cidr) => (acc ? acc : cidrCheck(cidr, ip)),
@@ -143,6 +145,8 @@ app.get('/', (req, res) =>
       console.error(err);
     }),
 );
+
+mkdir_p(config.uploadDir);
 
 app.listen(env.PORT || config.port || 3000, err => {
   if (err) {
