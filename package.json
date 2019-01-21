@@ -4,6 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "docker-build": "docker build -t hibes/http.upload .",
+    "docker-run": "docker run -v $(pwd)/www:/var/www/ --name http.upload -p 3000:3000 -d hibes/http.upload",
     "start": "node index.js"
   },
   "author": "",

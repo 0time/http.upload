@@ -1,4 +1,4 @@
-FROM hibes/docker-ubuntu-nvm-yarn
+FROM keymux/docker-ubuntu-nvm-yarn
 
 WORKDIR /app
 
