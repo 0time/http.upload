@@ -34,10 +34,14 @@ app.use((req, res, next) => {
   if (authorized) {
     next();
   } else {
-    res.status(401).send({
+    const response = {
       message: 'Unauthorized',
       ip,
-    });
+    };
+
+    console.error(response);
+
+    res.status(401).send(response);
   }
 });
 
