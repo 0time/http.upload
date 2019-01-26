@@ -5,11 +5,20 @@ const formidable = require('formidable');
 const fse = require('fs-extra');
 const os = require('os');
 const path = require('path');
+const sha256 = require('sha256');
 const tar = require('tar');
 const Promise = require('bluebird');
 
 const config = require('./config');
 const Network = require('cidr-grep/lib/network');
+
+app.set('etag', (body, encoding) => {
+  const etag = sha256(body);
+
+  console.error(etag);
+
+  return etag;
+});
 
 const cidrCheck = (cidr, ip) => Network.create(cidr).contains(ip);
 
@@ -130,27 +139,34 @@ app.get('/', (req, res) =>
         ['assets'],
       ),
     )
-    .tap(
-      ({file}) =>
-        new Promise((resolve, reject) =>
-          res.download(file, path.basename(file), err =>
-            err ? reject(err) : resolve(),
-          ),
-        ),
-    )
+    .then(({file, folder}) => Promise.props({
+      file,
+      fileContents: fse.readFile(file),
+      folder,
+    }))
+    .tap(({fileContents}) =>
+      res.set('etag', sha256(fileContents)))
+    .tap(() => res.set('Content-Type', 'application/tar+gzip'))
+    .tap(() => res.set('Content-Encoding', 'gzip'))
+    .tap(({fileContents}) =>
+      res.send(fileContents))
+    .tap(({file, folder}) => fse.unlink(file))
+    .tap(({folder}) => fse.rmdir(folder))
+    .tap(() => console.error({
+      'if-none-match': req.headers['if-none-match'],
+      'etag': res.get('etag')
+    }))
     .catch(err => {
       console.error(err);
 
-      res.sendStatus(500);
-    })
-    .tap(({file, folder}) => fse.unlink(file))
-    .tap(({folder}) => fse.rmdir(folder))
-    .catch(err => {
-      console.error(err);
+      if (!res.headersSent) {
+        res.sendStatus(500);
+      }
     }),
 );
 
-mkdir_p(config.uploadDir);
+mkdir_p(config.uploadDir)
+  .catch(console.error);
 
 app.listen(env.PORT || config.port || 3000, err => {
   if (err) {
