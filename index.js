@@ -1,15 +1,10 @@
-const Network = require('cidr-grep/lib/network');
 const Promise = require('bluebird');
 
 const express = require('express');
 const app = express();
-const formidable = require('formidable');
-const fse = require('fs-extra');
-const os = require('os');
-const path = require('path');
 const sha256 = require('sha256');
-const tar = require('tar');
 
+const authorizedIpMiddleware = require('./lib/authorized_ip_middleware');
 const config = require('./config');
 const {mkdir_p} = require('./lib/fs');
 
@@ -33,33 +28,7 @@ app.set('etag', (body, encoding) => {
   return etag;
 });
 
-const cidrCheck = (cidr, ip) => Network.create(cidr).contains(ip);
-
-app.use((req, res, next) => {
-  //const ip = req.connection.remoteAddress;
-  //const ip = req.connection.remoteAddress.replace(/^::ffff:/, '');
-  console.error(req.headers);
-
-  const ip = req.header('X-Forwarded-For') || req.connection.remoteAddress;
-
-  const authorized = config.authorized.reduce(
-    (acc, cidr) => (acc ? acc : cidrCheck(cidr, ip)),
-    false,
-  );
-
-  if (authorized) {
-    next();
-  } else {
-    const response = {
-      message: 'Unauthorized',
-      ip,
-    };
-
-    console.error(response);
-
-    res.status(401).send(response);
-  }
-});
+app.use(authorizedIpMiddleware)
 
 mkdir_p(config.uploadDir)
   .catch(console.error);
