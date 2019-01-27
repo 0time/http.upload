@@ -6,35 +6,16 @@ const path = require('path');
 const sha256 = require('sha256');
 
 const {mkdir_p} = require('../lib/fs');
-const {ensureResponse, logAndReject} = require('../lib/http');
+const {ensureResponse, formidablePromise, logAndReject, logForm, logRequest} = require('../lib/http');
 
 module.exports = [
   {
     method: 'post',
     route: '/upload',
-    cb: (req, res) => new Promise((resolve, reject) => {
-      const form = new formidable.IncomingForm();
-
-      form.on(
-        'fileBegin',
-        (name, file) =>
-          (file.path = path.resolve(config.uploadDir, file.name)),
-      );
-
-      form.on('file', (name, file) =>
-        console.error(`Uploaded ${file.name}`),
-      );
-
-      return form.parse(req, (err, fields, files) =>
-        err
-          ? reject(err)
-          : resolve({
-              fields,
-              files,
-            }),
-      );
-    })
-      .tap(console.error)
+    cb: (req, res) => Promise.resolve(req)
+      .tap(logRequest)
+      .then(formidablePromise)
+      .tap(logForm)
       .tap(({fields: {checksum}, files}) => fse.readFile(files.file.path).then(fileContents => {
         const computed = sha256(fileContents);
 
