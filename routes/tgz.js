@@ -36,10 +36,10 @@ module.exports = [
           tar.c(
             {
               gzip: true,
-              C: config.uploadDir,
+              C: path.join(config.uploadDir, req.query.context),
               file,
             },
-            paths.map(p => path.resolve(config.uploadDir, req.query.context, p))
+            paths
           ),
         )
         .then(({file, folder}) => Promise.props({
