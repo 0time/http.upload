@@ -8,6 +8,7 @@ docker rm -f ${C} || echo
 docker build -t ${C} .
 docker run \
   -v "$(pwd)"/www:/var/www \
+  -v /tmp:/tmp \
   --name ${C} \
   -d \
   -p 3000:3000 \
