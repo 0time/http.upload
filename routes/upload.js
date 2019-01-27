@@ -46,7 +46,7 @@ module.exports = [
         mkdir_p(path.dirname(path.resolve(config.uploadDir, fields.file_path))))
       .then(({fields, files}) => ({
         oldFile: files.file.path,
-        newFile: path.resolve(config.uploadDir, fields.file_path),
+        newFile: path.resolve(config.uploadDir, req.query.context, fields.file_path),
       }))
       .tap(({oldFile, newFile}) => fse.rename(oldFile, newFile))
       .then(({newFile}) => ({

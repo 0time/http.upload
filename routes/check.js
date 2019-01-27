@@ -13,7 +13,7 @@ const checksumMap = {
 const validateChecksum = ({query}) =>
   Promise.resolve(query)
     .then(accumulator => Promise.props(Object.assign({
-      fileContents: fse.readFile(path.resolve(config.uploadDir, accumulator.file))
+      fileContents: fse.readFile(path.resolve(config.uploadDir, query.context, accumulator.file))
     }, accumulator)))
     .then(accumulator => Object.assign({
       computed: sha256(accumulator.fileContents),

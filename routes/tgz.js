@@ -39,7 +39,7 @@ module.exports = [
               C: config.uploadDir,
               file,
             },
-            paths
+            paths.map(p => path.resolve(config.uploadDir, req.query.context, p))
           ),
         )
         .then(({file, folder}) => Promise.props({
@@ -56,7 +56,9 @@ module.exports = [
         .tap(({fileContents}) =>
           res.send(fileContents))
         .tap(({file, fileContents}) =>
-          console.error(`Sent ${file} (len: ${fileContents.length}) to client`))
+          req.fresh
+            ? console.error(`Sent 304`)
+            : console.error(`Sent ${file} (len: ${fileContents.length}) to client`))
         .tap(({file}) => {
           if (config.removeFiles) {
             fse.unlink(file)
