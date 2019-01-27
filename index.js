@@ -1,24 +1,28 @@
 const Promise = require('bluebird');
 
 const express = require('express');
-const app = express();
+const path = require('path');
 const sha256 = require('sha256');
 
 const authorizedIpMiddleware = require('./lib/authorized_ip_middleware');
 const config = require('./config');
 const {mkdir_p} = require('./lib/fs');
 
+const app = express();
 const {env} = process;
 
 // routes
 const routeSets = [
-  require('./routes/tgz'),
   require('./routes/check'),
+  require('./routes/deploy'),
+  require('./routes/tgz'),
   require('./routes/upload'),
 ];
 
 routeSets.forEach(routeSet => routeSet.forEach(({cb, method, route}) =>
   app[method](route, cb)));
+
+app.use('/deployments', express.static(path.resolve(config.deploymentDir)));
 
 app.set('etag', (body, encoding) => {
   const etag = sha256(body);
