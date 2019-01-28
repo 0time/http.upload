@@ -11,6 +11,11 @@ const {mkdir_p} = require('./lib/fs');
 const app = express();
 const {env} = process;
 
+const logRequest = require('./lib/log_request');
+
+app.use(logRequest);
+app.use(authorizedIpMiddleware);
+
 // routes
 const routeSets = [
   require('./routes/check'),
@@ -31,8 +36,6 @@ app.set('etag', (body, encoding) => {
 
   return etag;
 });
-
-app.use(authorizedIpMiddleware)
 
 mkdir_p(config.uploadDir)
   .catch(console.error);
